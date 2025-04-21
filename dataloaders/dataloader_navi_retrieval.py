@@ -162,7 +162,7 @@ class NAVI_DataLoader(Dataset):
         # Pair x L x T x 3 x H x W
         video = np.zeros((len(choice_video_ids), self.max_frames, 1, 3,
                           self.rawVideoExtractor.size, self.rawVideoExtractor.size), dtype=float)
-
+        total_video_data = self.video_data
         for i, video_id in enumerate(choice_video_ids):
             video_path = self.video_dict[video_id]
             frame_path = self.frame_path
