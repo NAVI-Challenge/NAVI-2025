@@ -59,7 +59,9 @@ class NAVI_DataLoader(Dataset):
         
         with open(total_track_path, 'r', encoding='utf-8') as file:
             total_track_data = json.load(file)
-            
+
+        self.video_data = total_track_data
+        
         total_track_keys = list(total_track_data.keys())
         video_dict = {}
         for video_id in total_track_keys:
@@ -160,13 +162,6 @@ class NAVI_DataLoader(Dataset):
         # Pair x L x T x 3 x H x W
         video = np.zeros((len(choice_video_ids), self.max_frames, 1, 3,
                           self.rawVideoExtractor.size, self.rawVideoExtractor.size), dtype=float)
-        
-        for i, video_id in enumerate(choice_video_ids):
-            total_video_path = self.video_dict[video_id]
-            break
-        
-        with open(total_video_path, "r") as f:
-            total_video_data = json.load(f)
 
         for i, video_id in enumerate(choice_video_ids):
             video_path = self.video_dict[video_id]
