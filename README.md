@@ -65,7 +65,6 @@ data_navi
 
 (2) About preprocess data
 ```bash
-cd preprocess
 python preprocess_data.py
 ```
 
