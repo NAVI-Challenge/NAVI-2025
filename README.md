@@ -68,8 +68,10 @@ data_navi
 python preprocess_data.py
 ```
 
-(2) About preprocess data
+(3) About preprocess data
+
 **You can download pretrained weights of XCLIP, trained by NAVI Dataset, from the link below**
+
 ```bash
 https://drive.google.com/drive/folders/1R4NyfenTWEB-TceeJPA8ehVZRUNhFVmC?usp=sharing
 ```
