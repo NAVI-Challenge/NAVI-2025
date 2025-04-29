@@ -10,7 +10,7 @@ The NAVI-Challenge, hosted at AVSS 2025, offers a new benchmark dataset that is 
 
 <br>
 
-The NAVI Dataset follows the basic structure of the CITYFLOW-NL Dataset, but extends it by incorporating vehicle CCTV video from multiple countries such as India and South Korea. It further enhances the dataset by providing bounding boxes for each vehicle, trajectory maps, and four diverse natural language descriptions per vehicle. Each description is composed of a combination of elements, including the main vehicle’s color, type, and movement; the surrounding vehicles’ color, type, and their relationship to the main vehicle; as well as the background captured by the CCTV camera. 
+The NAVI Dataset follows the basic structure of the CITYFLOW-NL Dataset, but extends it by incorporating vehicle CCTV video from multiple countries such as India and South Korea. It further enhances the dataset by providing bounding boxes for each vehicle, trajectory maps, and four diverse natural language descriptions per vehicle. Each description is composed of a combination of elements, including the main vehicle’s color, type, and movement; the surrounding vehicles’ color, type, and their relationship to the main vehicle.
 
 <br>
 
