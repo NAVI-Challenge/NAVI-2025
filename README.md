@@ -5,7 +5,7 @@ The NAVI-Challenge, hosted at AVSS 2025, offers a new benchmark dataset that is 
 
 ## NAVI Dataset
 <div style="width: 100%; text-align: center;">
-  <img src="images/figure_attributes.png" alt="Explanation of NAVI Dataset" style="width: 100%; max-width: 100%;">
+  <img src="images/figure.png" alt="Explanation of NAVI Dataset" style="width: 100%; max-width: 100%;">
 </div>
 
 <br>
