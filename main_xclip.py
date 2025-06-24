@@ -36,7 +36,7 @@ def get_args(description='X-CLIP on Retrieval Task'):
     parser.add_argument('--data_path', type=str, default='data/caption.pickle', help='data pickle file path')
     parser.add_argument('--features_path', type=str, default='data/videos_feature.pickle', help='feature path')
     parser.add_argument('--train_model_from', type=str, default='pretrained', help='feature path')
-    parser.add_argument("--pretrained_vit_path", type=str, default='/workspace/bomuchi/XCLIP/ckpts/ViT-B-16.pt', help="Path to pretrained ViT-B-16 checkpoint")
+    parser.add_argument("--pretrained_vit_path", type=str, default='path/to/your/vit/weight', help="Path to pretrained ViT-B-16 checkpoint")
 
     parser.add_argument('--num_thread_reader', type=int, default=1, help='')
     parser.add_argument('--lr', type=float, default=0.0001, help='initial learning rate')
@@ -176,26 +176,21 @@ def init_device(args, local_rank):
     return device, n_gpu
 
 
-
-
 def init_model(args, device, n_gpu, local_rank):
-    print(f"My Local Rank : {local_rank}")
     if args.init_model:
         model_state_dict = torch.load(args.init_model, map_location='cpu')
     else:
         model_state_dict = None
 
+    # Prepare model
     cache_dir = args.cache_dir if args.cache_dir else os.path.join(str(PYTORCH_PRETRAINED_BERT_CACHE), 'distributed')
-    
-    if args.train_model_from == 'scratch':
-        model = XCLIP.from_scratch(cross_model_name=args.cross_model, cache_dir=cache_dir, state_dict=model_state_dict, task_config=args)
-    else:
-        model = XCLIP.from_pretrained(model_path=args.init_model, cross_model_name=args.cross_model, cache_dir=cache_dir, task_config=args)
+    model = XCLIP.from_pretrained(args.cross_model, cache_dir=cache_dir, state_dict=model_state_dict, task_config=args)
 
-    
     model.to(device)
+
     return model
-    
+   
+
 
 
 
@@ -590,5 +585,4 @@ def main():
 
 if __name__ == "__main__":
     main()
-
 
