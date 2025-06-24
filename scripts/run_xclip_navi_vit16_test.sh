@@ -12,7 +12,7 @@ CUDA_VISIBLE_DEVICES=0 python -m torch.distributed.run --master_port=$MASTER_POR
     --features_path ${DATA_PATH}/navi/json/ \
     --output_dir ${DATA_PATH}/navi/output/ \
     --frame_path "path/to/DATA folder" \
-    --max_words 256 --max_frames 20 \
+    --max_words 77 --max_frames 20 \
     --datatype navi --train_model_from "" \
     --feature_framerate 1 --lr 1e-4 --coef_lr 1e-3 \
     --freeze_layer_num 0 --slice_framepos 2 \
