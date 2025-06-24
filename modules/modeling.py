@@ -27,79 +27,115 @@ class CLIP4ClipPreTrainedModel(PreTrainedModel, nn.Module):
         self.cross = None
 
     @classmethod
-    def from_scratch(cls, cross_model_name, state_dict=None, cache_dir=None, type_vocab_size=2, *inputs, **kwargs):
-        task_config = kwargs.get("task_config", None)
-        if task_config is None:
-            raise ValueError("task_config is required to initialize the model.")
+    def from_pretrained(cls, cross_model_name, state_dict=None, cache_dir=None, type_vocab_size=2, *inputs, **kwargs):
+        task_config = None
+        if "task_config" in kwargs.keys():
+            task_config = kwargs["task_config"]
+            if not hasattr(task_config, "local_rank"):
+                task_config.__dict__["local_rank"] = 0
+            elif task_config.local_rank == -1:
+                task_config.local_rank = 0
 
-        text_state_dict = {}
-
-        new_max_words = task_config.max_words
-        embed_dim = 512
-        vocab_size = 49408
-
-        # Initialize positional embedding
-        text_state_dict["positional_embedding"] = torch.randn(new_max_words, embed_dim) * 0.02
-
-        # Initialize token embedding
-        text_state_dict["token_embedding.weight"] = torch.randn(vocab_size, embed_dim) * 0.02 
-
-        # Initialize other required parameters
-        text_state_dict["text_projection"] = torch.randn(embed_dim, embed_dim) * 0.02
-        
-        # Initialize LayerNorm parameters
-        text_state_dict["ln_final.weight"] = torch.ones(embed_dim)
-        text_state_dict["ln_final.bias"] = torch.zeros(embed_dim)
-
-        text_state_dict["transformer.layers"] = 12  
-        text_state_dict["transformer.width"] = embed_dim 
+        if state_dict is None: 
+            state_dict = {}
 
 
 
-        # Initialize visual encoder parameters (pretrained ViT-B/16)
-        pretrained_vit_path = task_config.pretrained_vit_path
-        vit_model = torch.jit.load(pretrained_vit_path, map_location="cpu")
-        vit_state_dict = vit_model.state_dict()
+        if hasattr(task_config, 'pretrained_clip_name'):
+            pretrained_clip_name = task_config.pretrained_clip_name
+            
 
+        clip_state_dict = CLIP.get_config(pretrained_clip_name=pretrained_clip_name)
 
-        clip_state_dict = {}
-        clip_state_dict.update(vit_state_dict)
-        clip_state_dict.update(text_state_dict)
+        for key, val in clip_state_dict.items():
+            new_key = "clip." + key
+            if new_key not in state_dict:
+                # 이거 실행됨
+                state_dict[new_key] = val.clone()
 
+        cross_config, _ = CrossConfig.get_config(cross_model_name, cache_dir, type_vocab_size, state_dict=None, task_config=task_config)
 
-
-        # Add transformer resblocks explicitly
-        for i in range(text_state_dict["transformer.layers"]):
-            text_state_dict[f"transformer.resblocks.{i}.attn.in_proj_weight"] = torch.randn(3 * embed_dim, embed_dim) * 0.02
-            text_state_dict[f"transformer.resblocks.{i}.attn.in_proj_bias"] = torch.zeros(3 * embed_dim)
-            text_state_dict[f"transformer.resblocks.{i}.attn.out_proj.weight"] = torch.randn(embed_dim, embed_dim) * 0.02
-            text_state_dict[f"transformer.resblocks.{i}.attn.out_proj.bias"] = torch.zeros(embed_dim)
-            text_state_dict[f"transformer.resblocks.{i}.mlp.c_fc.weight"] = torch.randn(embed_dim * 4, embed_dim) * 0.02
-            text_state_dict[f"transformer.resblocks.{i}.mlp.c_fc.bias"] = torch.zeros(embed_dim * 4)
-            text_state_dict[f"transformer.resblocks.{i}.mlp.c_proj.weight"] = torch.randn(embed_dim, embed_dim * 4) * 0.02
-            text_state_dict[f"transformer.resblocks.{i}.mlp.c_proj.bias"] = torch.zeros(embed_dim)
-            text_state_dict[f"transformer.resblocks.{i}.ln_1.weight"] = torch.ones(embed_dim)
-            text_state_dict[f"transformer.resblocks.{i}.ln_1.bias"] = torch.zeros(embed_dim)
-            text_state_dict[f"transformer.resblocks.{i}.ln_2.weight"] = torch.ones(embed_dim)
-            text_state_dict[f"transformer.resblocks.{i}.ln_2.bias"] = torch.zeros(embed_dim)
-
-        
-
-        cross_config, _ = CrossConfig.get_config(cross_model_name, cache_dir=cache_dir, type_vocab_size=2, state_dict=None, task_config=task_config)
-        # Initialize the model
         model = cls(cross_config, clip_state_dict, *inputs, **kwargs)
 
-        return model 
-        
+        ## ===> Initialization trick [HARD CODE]
 
-        
-    @classmethod
-    def from_pretrained(cls, model_path, cross_model_name=None, task_config=None, cache_dir=None, *inputs, **kwargs):
-        model = cls.from_scratch(cross_model_name, task_config=task_config, cache_dir=cache_dir, *inputs, **kwargs)
-        state_dict = torch.load(model_path, map_location="cpu")
-        model.load_state_dict(state_dict)
+
+        if model.linear_patch == "3d":
+            contain_conv2 = False
+            for key in state_dict.keys():
+                if key.find("visual.conv2.weight") > -1:
+                    contain_conv2 = True
+                    break
+            if contain_conv2 is False and hasattr(model.clip.visual, "conv2"):
+                cp_weight = state_dict["clip.visual.conv1.weight"].clone()
+                kernel_size = model.clip.visual.conv2.weight.size(2)
+                conv2_size = model.clip.visual.conv2.weight.size()
+                conv2_size = list(conv2_size)
+
+                left_conv2_size = conv2_size.copy()
+                right_conv2_size = conv2_size.copy()
+                left_conv2_size[2] = (kernel_size - 1) // 2
+                right_conv2_size[2] = kernel_size - 1 - left_conv2_size[2]
+
+                left_zeros, right_zeros = None, None
+                if left_conv2_size[2] > 0:
+                    left_zeros = torch.zeros(*tuple(left_conv2_size), dtype=cp_weight.dtype, device=cp_weight.device)
+                if right_conv2_size[2] > 0:
+                    right_zeros = torch.zeros(*tuple(right_conv2_size), dtype=cp_weight.dtype, device=cp_weight.device)
+
+                cat_list = []
+                if left_zeros != None: cat_list.append(left_zeros)
+                cat_list.append(cp_weight.unsqueeze(2))
+                if right_zeros != None: cat_list.append(right_zeros)
+                cp_weight = torch.cat(cat_list, dim=2)
+
+                state_dict["clip.visual.conv2.weight"] = cp_weight
+
+
+
+
+        if model.sim_header == 'tightTransf':
+            contain_cross = False
+            for key in state_dict.keys():
+                if key.find("cross.transformer") > -1:
+                    contain_cross = True
+                    break
+            if contain_cross is False:
+                for key, val in clip_state_dict.items():
+                    if key == "positional_embedding":
+                        state_dict["cross.embeddings.position_embeddings.weight"] = val.clone()
+                        continue
+                    if key.find("transformer.resblocks") == 0:
+                        num_layer = int(key.split(".")[2])
+
+                        # cut from beginning
+                        if num_layer < task_config.cross_num_hidden_layers:
+                            state_dict["cross."+key] = val.clone()
+                            continue
+
+        if model.sim_header == "seqLSTM" or model.sim_header == "seqTransf":
+            contain_frame_position = False
+            for key in state_dict.keys():
+                if key.find("frame_position_embeddings") > -1:
+                    contain_frame_position = True
+                    break
+            if contain_frame_position is False:
+                for key, val in clip_state_dict.items():
+                    if key == "positional_embedding":
+                        state_dict["frame_position_embeddings.weight"] = val.clone()
+                        continue
+                    if model.sim_header == "seqTransf" and key.find("transformer.resblocks") == 0:
+                        num_layer = int(key.split(".")[2])
+                        # cut from beginning
+                        if num_layer < task_config.cross_num_hidden_layers:
+                            state_dict[key.replace("transformer.", "transformerClip.")] = val.clone()
+                            continue
+
+        if state_dict is not None:
+            model = cls.init_preweight(model, state_dict, task_config=task_config)
+
         return model
-
+    
 def show_log(task_config, info):
     if task_config is None or task_config.local_rank == 0:
         logger.warning(info)
