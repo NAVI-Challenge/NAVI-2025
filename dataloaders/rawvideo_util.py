@@ -38,7 +38,7 @@ class RawVideoExtractorCV2():
         
         images = []
         if video_id in total_video_data:
-            frames = total_video_data[video_id]['frames']  # 프레임 파일명 리스트 (디렉토리는 없음)
+            frames = total_video_data[video_id]['frames_with_boxes']  # 프레임 파일명 리스트 (디렉토리는 없음)
 
             if len(frames) > 0:
                 # `max_frames` 개수만큼 균등하게 선택
