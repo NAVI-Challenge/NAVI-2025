@@ -59,7 +59,7 @@ def get_args(description='X-CLIP on Retrieval Task'):
 
     parser.add_argument("--output_dir", default=None, type=str, required=True,
                         help="The output directory where the model predictions and checkpoints will be written.")
-    parser.add_argument("--cross_model", default="/workspace/bomuchi/XCLIP/modules/cross-base/cross_config.json", type=str, required=False, help="Cross module")
+    parser.add_argument("--cross_model", default="./modules/cross-base/cross_config.json", type=str, required=False, help="Cross module")
     parser.add_argument("--init_model", default=None, type=str, required=False, help="Initial model.")
     parser.add_argument("--resume_model", default=None, type=str, required=False, help="Resume train model.")
     parser.add_argument("--do_lower_case", action='store_true', help="Set this flag if you are using an uncased model.")
