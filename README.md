@@ -77,6 +77,7 @@ https://drive.google.com/drive/folders/1R4NyfenTWEB-TceeJPA8ehVZRUNhFVmC?usp=sha
 ```
 
 Before running, make sure to match your ViT-B/16 weight file path in main_xclip.py:
+
 parser.add_argument("--pretrained_vit_path", type=str, default='path/to/your/vit/weight', help="Path to pretrained ViT-B-16 checkpoint")
 
 (4) About the running scripts
