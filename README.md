@@ -76,6 +76,9 @@ python preprocess_data.py
 https://drive.google.com/drive/folders/1R4NyfenTWEB-TceeJPA8ehVZRUNhFVmC?usp=sharing
 ```
 
+Before running, make sure to match your ViT-B/16 weight file path in main_xclip.py:
+parser.add_argument("--pretrained_vit_path", type=str, default='path/to/your/vit/weight', help="Path to pretrained ViT-B-16 checkpoint")
+
 (4) About the running scripts
 
 **Before running scripts, setting directory of data in scripts file.**
@@ -87,5 +90,5 @@ sh scripts/run_xclip_navi_vit16_test.sh
 sh scripts/run_xclip_navi_vit16_train.sh
 ```
 
-## Acknowledgments
+## Implement Details
 In the original XCLIP, the text encoder has a maximum token length of 77, which was insufficient to accommodate the fine-grained and detailed descriptions in the NAVI Dataset. To address this, we increased the maximum token length of the text encoder to 256 and trained it from scratch. For the visual encoder, we fine-tuned the pretrained ViT-B/16 model to adapt it to our dataset.
