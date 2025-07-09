@@ -76,7 +76,6 @@ python preprocess_data.py
 https://drive.google.com/drive/folders/1R4NyfenTWEB-TceeJPA8ehVZRUNhFVmC?usp=sharing
 ```
 
-
 (4) About the running scripts
 
 **Before running scripts, setting directory of data in scripts file.**
